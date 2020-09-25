@@ -4,16 +4,17 @@ var tableData = data;
 // Set variables
 var tbody = d3.select("tbody");
 var button = d3.select("#filter-btn");
-var form = d3.select("#form");
+var form = d3.select("#filters");
 var clearButton = d3.select("#clear-filter-btn")
+
 
 // get events to run functions
 button.on("click", runFilter);
-form.on("submit", runFilter);
+form.on("change", runFilter);
 clearButton.on("click", clearFilter);
 
 //populate with original data
-populateTable(tableData);
+d3.select(window).on("load", clearFilter());
 
 //function to populate data table
 function populateTable(dataTable) {
@@ -33,22 +34,28 @@ function populateTable(dataTable) {
 
 //function to filter data with filters
 function runFilter() {
-  d3.event.preventDefault();
+  // this line breaks with version 6 of d3 and doesn't seem like it is needed as the page doesn't reload.
+  // d3.event.preventDefault();
 
   var filteredData = tableData
   var dateFilter = d3.select("#datetime").property("value")
-  var stateFilter = d3.select("#state").property("value")
-  var cityFilter = d3.select("#city").property("value")
-  var countryFilter = d3.select("#country").property("value")
-  var shapeFilter = d3.select("#shape").property("value")
+  var stateFilter = d3.select("#state").property("value").toLowerCase()
+  var cityFilter = d3.select("#city").property("value").toLowerCase()
+  var countryFilter = d3.select("#country").property("value").toLowerCase()
+  var shapeFilter = d3.select("#shape").property("value").toLowerCase()
 
   if (dateFilter) {
       filteredData = filteredData.filter(ufo => ufo.datetime === dateFilter);
   }
 
   if (stateFilter) {
+    var regex =/^[a-zA-Z]{2}$/;
+    if (regex.test(stateFilter) == false) {
+      d3.select("#state_error").text("Please enter state abbreviation");
+    } else {
     filteredData = filteredData.filter(ufo => ufo.state === stateFilter);
-  }
+      clearErrors();
+    }}
 
   if (cityFilter) {
     filteredData = filteredData.filter(ufo => ufo.city === cityFilter);
@@ -72,4 +79,11 @@ function clearFilter() {
     document.getElementById("city").value = "";
     document.getElementById("country").value = "";
     document.getElementById("shape").value = "";
+    tbody.html("");
+    clearErrors();
+    populateTable(tableData);
+}
+
+function clearErrors() {
+  d3.select("#state_error").text("");
 }
